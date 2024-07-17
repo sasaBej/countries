@@ -1,45 +1,43 @@
-import { Card, CardDescription } from "@/components/ui/card";
-import Image from "next/image";
+"use client";
 
-export default async function Home() {
-  const getAllCountris = async () => {
-    const res = await fetch(
-      "https://restcountries.com/v3.1/all?fields=name,capital,population,region,flags"
-    );
-    return res.json();
+import { CardCountry } from "@/components/cardCountry";
+import { useQuery } from "@tanstack/react-query";
+
+interface CountryI {
+  name: {
+    common: string;
   };
+  capital: string[];
+  population: number;
+  region: string;
+  flags: {
+    svg: string;
+    png: string;
+  };
+}
 
-  const data = await getAllCountris();
+export default function Home() {
+  const { isPending, error, data, isFetching } = useQuery({
+    queryKey: ["countriesData"],
+    queryFn: async () => {
+      const response = await fetch(
+        "https://restcountries.com/v3.1/all?fields=name,capital,population,region,flags"
+      );
+      return await response.json();
+    },
+  });
 
   return (
     <main className="container mx-auto px-4 flex flex-wrap gap-8 justify-center">
-      {data?.map((country) => (
-        <Card key={country?.name?.common} className="flex flex-col w-[220px]">
-          <Image
-            src={country?.flags?.svg || country?.flags?.png}
-            alt="country flag"
-            height={0}
-            width={0}
-            className="h-auto w-auto"
-          />
-          <div className="border-[1px] rounded-b-lg p-4 flex flex-col flex-1 mb-auto justify-center gap-1">
-            <CardDescription className="text-xl md:text-xl text-black font-bold">
-              {country?.name?.common}
-            </CardDescription>
-            <CardDescription>
-              <span className="font-bold">Population:</span>{" "}
-              {country?.population?.toLocaleString()}
-            </CardDescription>
-            <CardDescription>
-              <span className="font-bold">Region:</span> {country?.region}
-            </CardDescription>
-            <CardDescription>
-              <span className="font-bold">Capital:</span>{" "}
-              {country?.capital?.join(", ")}
-            </CardDescription>
-          </div>
-        </Card>
-        // <div key={el?.name?.common}>{el?.name?.common}</div>
+      {data?.map((country: CountryI) => (
+        <CardCountry
+          key={country?.name?.common}
+          flag={country?.flags?.svg || country?.flags?.png}
+          countryName={country?.name?.common}
+          population={country?.population}
+          region={country?.region}
+          capital={country?.capital}
+        />
       ))}
     </main>
   );
